@@ -232,3 +232,22 @@ class SaveQML:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
+            
+            self.dockwidget.SaveButton.clicked.connect(self.save_qml_file)
+            
+    def save_qml_file(self):
+        import os
+        from qgis.core import QgsProject, QgsMapLayer, Qgis
+        from qgis.utils import iface
+
+        layer_list = []
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.type() == QgsMapLayer.VectorLayer or layer.type() == QgsMapLayer.RasterLayer:
+                layer_list.append(layer)
+            else:
+                continue
+
+        if len(layer_list) == 0:
+            iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
+        else:
+            layer_list[0].saveNamedStyle('C:\Tomas\Desktop\Magistr\Free_software_GIS\save_folder\qml_file.qml')
