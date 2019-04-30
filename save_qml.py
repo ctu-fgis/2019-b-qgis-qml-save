@@ -236,7 +236,6 @@ class SaveQML:
             self.dockwidget.SaveButton.clicked.connect(self.save_qml_file)
             
     def save_qml_file(self):
-        import os
         from qgis.core import QgsProject, QgsMapLayer, Qgis
         from qgis.utils import iface
 
@@ -250,4 +249,10 @@ class SaveQML:
         if len(layer_list) == 0:
             iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
         else:
-            layer_list[0].saveNamedStyle('C:\Tomas\Desktop\Magistr\Free_software_GIS\save_folder\qml_file.qml')
+            from os.path import expanduser
+            output_file = os.path.join(expanduser("~"), 'xxx', 'qml_file.qml')
+            layer_list[0].saveNamedStyle(output_file)
+            if not os.path.exists(output_file):
+                iface.messageBar().pushMessage('Failed creating output file {}'.format(output_file), level = Qgis.Critical, duration = 5)
+            else:
+                iface.messageBar().pushMessage('Output file {} saved'.format(output_file), level = Qgis.Success, duration = 5)
