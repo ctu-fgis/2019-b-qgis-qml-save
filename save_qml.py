@@ -250,7 +250,7 @@ class SaveQML:
             iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
         else:
             from os.path import expanduser
-            output_file = os.path.join(expanduser("~"), 'xxx', 'qml_file.qml')
+            output_file = os.path.join(expanduser("~"), 'qml_file.qml')
             layer_list[0].saveNamedStyle(output_file)
             if not os.path.exists(output_file):
                 iface.messageBar().pushMessage('Failed creating output file {}'.format(output_file), level = Qgis.Critical, duration = 5)
