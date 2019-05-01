@@ -233,7 +233,15 @@ class SaveQML:
             self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
             
+            self.dockwidget.toolButton.clicked.connect(self.output_dir)
             self.dockwidget.SaveButton.clicked.connect(self.save_qml_file)
+            
+    def output_dir(self):
+        from PyQt5.QtWidgets import QFileDialog
+        self.dirname = QFileDialog.getExistingDirectory(
+            self.dockwidget, "Select directory ", os.path.expanduser("~")
+        )
+        self.dockwidget.lineEdit.setText(self.dirname)
             
     def save_qml_file(self):
         from qgis.core import QgsProject, QgsMapLayer, Qgis
@@ -250,9 +258,10 @@ class SaveQML:
             iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
         else:
             from os.path import expanduser
-            output_file = os.path.join(expanduser("~"), 'qml_file.qml')
-            layer_list[0].saveNamedStyle(output_file)
-            if not os.path.exists(output_file):
-                iface.messageBar().pushMessage('Failed creating output file {}'.format(output_file), level = Qgis.Critical, duration = 5)
-            else:
-                iface.messageBar().pushMessage('Output file {} saved'.format(output_file), level = Qgis.Success, duration = 5)
+            for layers in layer_list:
+                output_file = os.path.join(self.dirname, '{0}.qml'.format(layers.name()))
+                layers.saveNamedStyle(output_file)
+                if not os.path.exists(output_file):
+                    iface.messageBar().pushMessage('Failed creating output file {}'.format(output_file), level = Qgis.Critical, duration = 5)
+                else:
+                    iface.messageBar().pushMessage('Output file(s) saved', level = Qgis.Success, duration = 5)
