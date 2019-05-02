@@ -31,7 +31,6 @@ from .resources import *
 from .save_qml_dockwidget import SaveQMLDockWidget
 import os.path
 
-
 class SaveQML:
     """QGIS Plugin Implementation."""
 
@@ -246,7 +245,7 @@ class SaveQML:
     def save_qml_file(self):
         from qgis.core import QgsProject, QgsMapLayer, Qgis
         from qgis.utils import iface
-
+        
         layer_list = []
         for layer in QgsProject.instance().mapLayers().values():
             if layer.type() == QgsMapLayer.VectorLayer or layer.type() == QgsMapLayer.RasterLayer:
@@ -258,10 +257,19 @@ class SaveQML:
             iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
         else:
             from os.path import expanduser
-            for layers in layer_list:
-                output_file = os.path.join(self.dirname, '{0}.qml'.format(layers.name()))
-                layers.saveNamedStyle(output_file)
-                if not os.path.exists(output_file):
-                    iface.messageBar().pushMessage('Failed creating output file {}'.format(output_file), level = Qgis.Critical, duration = 5)
-                else:
-                    iface.messageBar().pushMessage('Output file(s) saved', level = Qgis.Success, duration = 5)
+            if self.dockwidget.checkBox.isChecked():
+                for layers in layer_list:
+                    output_file = os.path.join(self.dirname, '{0}.qml'.format(layers.name()))
+                    layers.saveNamedStyle(output_file)
+                    if not os.path.exists(output_file):
+                        iface.messageBar().pushMessage('Failed creating output file {}'.format(output_file), level = Qgis.Critical, duration = 5)
+                    else:
+                        iface.messageBar().pushMessage('Output file {} saved'.format(output_file), level = Qgis.Success, duration = 5)
+            else:
+                for layers in layer_list:
+                    output_file = os.path.join(self.dirname, '{0}.qml'.format(layers.name()))
+                    if os.path.exists(output_file):
+                        iface.messageBar().pushMessage('File {} already exists'.format(output_file), level = Qgis.Critical, duration = 5)
+                    else:
+                        layers.saveNamedStyle(output_file)
+                        iface.messageBar().pushMessage('Output file {} saved'.format(output_file), level = Qgis.Success, duration = 5)
