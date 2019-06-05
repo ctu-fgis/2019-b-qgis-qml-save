@@ -236,13 +236,13 @@ class SaveQML:
             self.iface.addDockWidget(Qt.LeftDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
             
-            self.dockwidget.checkBox_2.stateChanged.connect(self.store_to_layer_dir)
+            self.dockwidget.checkBoxOutputdir.stateChanged.connect(self.store_to_layer_dir)
             self.dockwidget.toolButton.clicked.connect(self.output_dir)
             self.dockwidget.SaveButton.clicked.connect(self.save_qml_file)
             self.dockwidget.lineEdit.setReadOnly(True)
     
     def store_to_layer_dir(self):
-        if self.dockwidget.checkBox_2.isChecked():
+        if self.dockwidget.checkBoxOutputdir.isChecked():
             self.dockwidget.lineEdit.setDisabled(True)
             self.dockwidget.toolButton.setDisabled(True)
         else:
@@ -265,8 +265,8 @@ class SaveQML:
         if len(layer_list) == 0:
             iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
         else:
-            if self.dockwidget.checkBox_2.isChecked():
-                if self.dockwidget.checkBox.isChecked():
+            if self.dockwidget.checkBoxOutputdir.isChecked():
+                if self.dockwidget.checkBoxOverwrite.isChecked():
                     layers_count = 0
                     for layers in layer_list:
                         layer_dir = layers.source()
@@ -305,7 +305,7 @@ class SaveQML:
                             iface.messageBar().pushMessage('{0} QML files saved to relevant layer directory'.format(saved_layer), level = Qgis.Success, duration = 5)
                             iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
             else:
-                if self.dockwidget.checkBox.isChecked():
+                if self.dockwidget.checkBoxOverwrite.isChecked():
                     if self.dockwidget.lineEdit.text() == '':
                         iface.messageBar().pushMessage('Output directory not defined', level = Qgis.Warning, duration = 5)
                     else:
