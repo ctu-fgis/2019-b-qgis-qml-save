@@ -244,10 +244,16 @@ class SaveQML:
     def store_to_layer_dir(self):
         if self.dockwidget.checkBoxOutputdir.isChecked():
             self.dockwidget.lineEdit.setDisabled(True)
+            self.dockwidget.lineEdit.setText(None)
             self.dockwidget.toolButton.setDisabled(True)
         else:
             self.dockwidget.lineEdit.setEnabled(True)
             self.dockwidget.toolButton.setEnabled(True)
+            try:
+                self.dirname
+            except:
+                self.dirname = None
+            self.dockwidget.lineEdit.setText(self.dirname)
     
     def output_dir(self):
         self.dirname = QFileDialog.getExistingDirectory(
@@ -255,6 +261,15 @@ class SaveQML:
         )
         self.dockwidget.lineEdit.setText(self.dirname)
             
+    def store_qml(self, valid_layer, overwrite, dirname):
+        if not dirname:
+            layer_dir = valid_layer.source()
+            dirname = os.path.join(layer_dir,'..', '{}.qml'.format(valid_layer.name()))
+        if overwrite == True:
+            valid_layer.saveNamedStyle(dirname)
+            if not os.path.exists(dirname):
+                iface.messageBar().pushMessage('Failed creating output file {}'.format(dirname), level = Qgis.Critical, duration = 5)
+
     def save_qml_file(self):
         layer_list = []
         for layer in QgsProject.instance().mapLayers().values():
@@ -265,85 +280,110 @@ class SaveQML:
         if len(layer_list) == 0:
             iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
         else:
-            if self.dockwidget.checkBoxOutputdir.isChecked():
-                if self.dockwidget.checkBoxOverwrite.isChecked():
-                    layers_count = 0
-                    for layers in layer_list:
-                        layer_dir = layers.source()
-                        output_file = os.path.join(layer_dir,'..', '{}.qml'.format(layers.name()))
-                        layers.saveNamedStyle(output_file)
-                        layers_count = layers_count + 1
-                    if layers_count == 1:
-                        iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(layer_dir,'..'), level = Qgis.Success, duration = 5)
-                    else:
-                        iface.messageBar().pushMessage('{} QML files saved to relevant layer directory'.format(layers_count), level = Qgis.Success, duration = 5)
+            if not self.dockwidget.checkBoxOutputdir.isChecked():
+                if not self.dockwidget.lineEdit.text():
+                    dirname = 'Not defined'
                 else:
-                    saved_layer = 0
-                    exist_layer = 0
-                    exist_layer_name = []
-                    for layers in layer_list:
-                        layer_dir = layers.source()
-                        output_file = os.path.join(layer_dir,'..', '{}.qml'.format(layers.name()))
-                        if os.path.exists(output_file):
-                            exist_layer = exist_layer + 1
-                            exist_layer_name.append('{}.qml'.format(layers.name()))
-                        else:
-                            layers.saveNamedStyle(output_file)
-                            saved_layer = saved_layer + 1
-                    if exist_layer == 0:
-                        if saved_layer == 1:
-                            iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(layer_dir,'..'), level = Qgis.Success, duration = 5)
-                        else:
-                            iface.messageBar().pushMessage('{} QML files saved to relevant layer directory'.format(saved_layer), level = Qgis.Success, duration = 5)
-                    elif saved_layer == 0:
-                        iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
-                    else:
-                        if saved_layer == 1:
-                            iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(layer_dir,'..'), level = Qgis.Success, duration = 5)
-                            iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
-                        else:
-                            iface.messageBar().pushMessage('{0} QML files saved to relevant layer directory'.format(saved_layer), level = Qgis.Success, duration = 5)
-                            iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
+                    dirname = self.dirname
             else:
-                if self.dockwidget.checkBoxOverwrite.isChecked():
-                    if self.dockwidget.lineEdit.text() == '':
-                        iface.messageBar().pushMessage('Output directory not defined', level = Qgis.Warning, duration = 5)
-                    else:
-                        layers_count = 0
-                        for layers in layer_list:
-                            output_file = os.path.join(self.dirname, '{}.qml'.format(layers.name()))
-                            layers.saveNamedStyle(output_file)
-                            layers_count = layers_count + 1
-                        if layers_count == 1:
-                            iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(self.dirname), level = Qgis.Success, duration = 5)
-                        else:
-                            iface.messageBar().pushMessage('{0} QML files saved to directory {1}'.format(layers_count,self.dirname), level = Qgis.Success, duration = 5)
-                else:
-                    if self.dockwidget.lineEdit.text() == '':
-                        iface.messageBar().pushMessage('Output directory not defined', level = Qgis.Warning, duration = 5)
-                    else:
-                        saved_layer = 0
-                        exist_layer = 0
-                        exist_layer_name = []
-                        for layers in layer_list:
-                            output_file = os.path.join(self.dirname, '{}.qml'.format(layers.name()))
-                            if os.path.exists(output_file):
-                                exist_layer = exist_layer + 1
-                                exist_layer_name.append('{}.qml'.format(layers.name()))
-                            else:
-                                layers.saveNamedStyle(output_file)
-                                saved_layer = saved_layer + 1
-                        if exist_layer == 0:
-                            if saved_layer == 1:
-                                iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(self.dirname), level = Qgis.Success, duration = 5)
-                            else:
-                                iface.messageBar().pushMessage('{0} QML files saved to directory {1}'.format(saved_layer,self.dirname), level = Qgis.Success, duration = 5)
-                        elif saved_layer == 0:
-                            iface.messageBar().pushMessage('QML files ({0}) already exist in directory {1}'.format(', '.join(exist_layer_name),self.dirname), level = Qgis.Warning, duration = 5)
-                        else:
-                            if saved_layer == 1:
-                                iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(self.dirname), level = Qgis.Success, duration = 5)
-                                iface.messageBar().pushMessage('QML files ({0}) already exist in directory {1}'.format(', '.join(exist_layer_name),self.dirname), level = Qgis.Warning, duration = 5)
-                            else:
-                                iface.messageBar().pushMessage('{0} QML files saved to directory {1}'.format(saved_layer,self.dirname), level = Qgis.Success, duration = 5)
-                                iface.messageBar().pushMessage('QML files ({0}) already exist in directory {1}'.format(', '.join(exist_layer_name),self.dirname), level = Qgis.Warning, duration = 5)
+                dirname = None
+            overwrite = self.dockwidget.checkBoxOverwrite.isChecked()
+            if dirname == 'Not defined':
+                iface.messageBar().pushMessage('Output directory not defined', level = Qgis.Warning, duration = 5)
+            else:
+                for valid_layer in layer_list:
+                    self.store_qml(valid_layer, overwrite, dirname)
+        
+        
+    # def save_qml_file(self):
+        # layer_list = []
+        # for layer in QgsProject.instance().mapLayers().values():
+            # if layer.type() == QgsMapLayer.VectorLayer or layer.type() == QgsMapLayer.RasterLayer:
+                # layer_list.append(layer)
+            # else:
+                # continue
+        # if len(layer_list) == 0:
+            # iface.messageBar().pushMessage('Current project does not have any valid layers', level = Qgis.Warning, duration = 5)
+        # else:
+            # if self.dockwidget.checkBoxOutputdir.isChecked():
+                # if self.dockwidget.checkBoxOverwrite.isChecked():
+                    # layers_count = 0
+                    # for layers in layer_list:
+                        # layer_dir = layers.source()
+                        # output_file = os.path.join(layer_dir,'..', '{}.qml'.format(layers.name()))
+                        # layers.saveNamedStyle(output_file)
+                        # layers_count = layers_count + 1
+                    # if layers_count == 1:
+                        # iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(layer_dir,'..'), level = Qgis.Success, duration = 5)
+                    # else:
+                        # iface.messageBar().pushMessage('{} QML files saved to relevant layer directory'.format(layers_count), level = Qgis.Success, duration = 5)
+                # else:
+                    # saved_layer = 0
+                    # exist_layer = 0
+                    # exist_layer_name = []
+                    # for layers in layer_list:
+                        # layer_dir = layers.source()
+                        # output_file = os.path.join(layer_dir,'..', '{}.qml'.format(layers.name()))
+                        # if os.path.exists(output_file):
+                            # exist_layer = exist_layer + 1
+                            # exist_layer_name.append('{}.qml'.format(layers.name()))
+                        # else:
+                            # layers.saveNamedStyle(output_file)
+                            # saved_layer = saved_layer + 1
+                    # if exist_layer == 0:
+                        # if saved_layer == 1:
+                            # iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(layer_dir,'..'), level = Qgis.Success, duration = 5)
+                        # else:
+                            # iface.messageBar().pushMessage('{} QML files saved to relevant layer directory'.format(saved_layer), level = Qgis.Success, duration = 5)
+                    # elif saved_layer == 0:
+                        # iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
+                    # else:
+                        # if saved_layer == 1:
+                            # iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(layer_dir,'..'), level = Qgis.Success, duration = 5)
+                            # iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
+                        # else:
+                            # iface.messageBar().pushMessage('{0} QML files saved to relevant layer directory'.format(saved_layer), level = Qgis.Success, duration = 5)
+                            # iface.messageBar().pushMessage('QML files ({0}) already exist in relevant layer directory'.format(', '.join(exist_layer_name)), level = Qgis.Warning, duration = 5)
+            # else:
+                # if self.dockwidget.checkBoxOverwrite.isChecked():
+                    # if self.dockwidget.lineEdit.text() == '':
+                        # iface.messageBar().pushMessage('Output directory not defined', level = Qgis.Warning, duration = 5)
+                    # else:
+                        # layers_count = 0
+                        # for layers in layer_list:
+                            # output_file = os.path.join(self.dirname, '{}.qml'.format(layers.name()))
+                            # layers.saveNamedStyle(output_file)
+                            # layers_count = layers_count + 1
+                        # if layers_count == 1:
+                            # iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(self.dirname), level = Qgis.Success, duration = 5)
+                        # else:
+                            # iface.messageBar().pushMessage('{0} QML files saved to directory {1}'.format(layers_count,self.dirname), level = Qgis.Success, duration = 5)
+                # else:
+                    # if self.dockwidget.lineEdit.text() == '':
+                        # iface.messageBar().pushMessage('Output directory not defined', level = Qgis.Warning, duration = 5)
+                    # else:
+                        # saved_layer = 0
+                        # exist_layer = 0
+                        # exist_layer_name = []
+                        # for layers in layer_list:
+                            # output_file = os.path.join(self.dirname, '{}.qml'.format(layers.name()))
+                            # if os.path.exists(output_file):
+                                # exist_layer = exist_layer + 1
+                                # exist_layer_name.append('{}.qml'.format(layers.name()))
+                            # else:
+                                # layers.saveNamedStyle(output_file)
+                                # saved_layer = saved_layer + 1
+                        # if exist_layer == 0:
+                            # if saved_layer == 1:
+                                # iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(self.dirname), level = Qgis.Success, duration = 5)
+                            # else:
+                                # iface.messageBar().pushMessage('{0} QML files saved to directory {1}'.format(saved_layer,self.dirname), level = Qgis.Success, duration = 5)
+                        # elif saved_layer == 0:
+                            # iface.messageBar().pushMessage('QML files ({0}) already exist in directory {1}'.format(', '.join(exist_layer_name),self.dirname), level = Qgis.Warning, duration = 5)
+                        # else:
+                            # if saved_layer == 1:
+                                # iface.messageBar().pushMessage('1 QML file saved to directory {}'.format(self.dirname), level = Qgis.Success, duration = 5)
+                                # iface.messageBar().pushMessage('QML files ({0}) already exist in directory {1}'.format(', '.join(exist_layer_name),self.dirname), level = Qgis.Warning, duration = 5)
+                            # else:
+                                # iface.messageBar().pushMessage('{0} QML files saved to directory {1}'.format(saved_layer,self.dirname), level = Qgis.Success, duration = 5)
+                                # iface.messageBar().pushMessage('QML files ({0}) already exist in directory {1}'.format(', '.join(exist_layer_name),self.dirname), level = Qgis.Warning, duration = 5)
