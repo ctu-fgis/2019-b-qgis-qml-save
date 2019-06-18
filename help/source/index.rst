@@ -29,10 +29,10 @@ If installation went well, new icon appears in QGIS:
 Manual
 ======
 
-Plugin appearance
------------------
+User interface
+--------------
 
-.. image:: images/appearance.png
+.. image:: images/ui.png
 
 Choosing output directory
 -------------------------
@@ -50,7 +50,7 @@ Overwrite or not
 ----------------
 
 The user may further decide whether overwrite already existing *QML* files or not.
-For this purpose there is a ``Allow overwriting`` checkbox.
+For this purpose there is an ``Allow overwriting`` checkbox.
 
 .. image:: images/overwrite.png
 
