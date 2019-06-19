@@ -1,6 +1,6 @@
 # Assignment
 
-QGis plugin for saving qml files
+QGIS plugin for saving qml files
 
 # Author
 
